@@ -99,8 +99,9 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
       
       onSuccess?.();
     } catch (error: unknown) {
+      console.error("Transaction Error Details:", error); // Added detailed logging
       toast.error("Gagal mencatat transaksi", {
-        description: error instanceof Error ? error.message : "Terjadi kesalahan yang tidak diketahui",
+        description: error instanceof Error ? error.message : "Terjadi kesalahan yang tidak diketahui. Cek konsol untuk detail.",
       });
     } finally {
       setLoading(false);

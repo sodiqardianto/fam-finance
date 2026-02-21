@@ -17,20 +17,39 @@ export function SavingsGoalForm({ onSuccess }: SavingsGoalFormProps) {
   const [name, setName] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
 
+  // Helper to format string to thousands separator
+  const formatDisplayAmount = (val: string) => {
+    // Remove all non-digits
+    const clean = val.replace(/\D/g, "");
+    if (!clean) return "";
+    return Number(clean).toLocaleString("id-ID");
+  };
+
+  // Helper to get raw number from formatted string
+  const getRawAmount = (val: string) => {
+    return val.replace(/\D/g, "");
+  };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatDisplayAmount(e.target.value);
+    setTargetAmount(formatted);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!dbUser?.familyId) return;
     
     setLoading(true);
+    const rawAmount = Number(getRawAmount(targetAmount));
 
     try {
       await transactionsApi.savingsGoals.create({
         name,
-        targetAmount: Number(targetAmount),
+        targetAmount: rawAmount,
       });
 
       toast.success("Tujuan tabungan berhasil dibuat! 🎯", {
-        description: `Target ${name} sebesar Rp ${Number(targetAmount).toLocaleString()} telah ditambahkan.`,
+        description: `Target ${name} sebesar Rp ${rawAmount.toLocaleString("id-ID")} telah ditambahkan.`,
       });
       
       onSuccess?.();
@@ -61,9 +80,10 @@ export function SavingsGoalForm({ onSuccess }: SavingsGoalFormProps) {
         <div>
           <label className="text-[10px] font-black uppercase tracking-[0.2em] mb-2 block text-zinc-400 ml-1">Target Jumlah (Rp)</label>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
             value={targetAmount}
-            onChange={(e) => setTargetAmount(e.target.value)}
+            onChange={handleAmountChange}
             placeholder="0"
             className="w-full h-16 bg-white/50 border border-white/60 rounded-[20px] px-6 focus:outline-none focus:border-zinc-900 transition-all text-2xl font-black placeholder:text-zinc-200"
             required

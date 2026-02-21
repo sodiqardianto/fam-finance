@@ -438,7 +438,7 @@ export default function HistoryPage() {
                           <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-4 flex-1 min-w-0">
                               <div className={cn(
-                                "p-3.5 rounded-2xl shadow-inner transition-transform group-hover:scale-110 flex-shrink-0",
+                                "p-3.5 rounded-2xl shadow-inner transition-transform group-hover:scale-110 shrink-0",
                                 colors.bg,
                                 colors.text
                               )}>
@@ -453,7 +453,7 @@ export default function HistoryPage() {
                                     {transaction.category}
                                   </span>
                                   {transaction.fundSource === 'private' && (
-                                    <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-full flex-shrink-0">
+                                    <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-full shrink-0">
                                       Pribadi
                                     </span>
                                   )}
@@ -465,7 +465,7 @@ export default function HistoryPage() {
                                 )}
                               </div>
                             </div>
-                            <div className="text-right flex-shrink-0">
+                            <div className="text-right shrink-0">
                               <div className={cn(
                                 "font-black text-lg sm:text-xl",
                                 colors.amount

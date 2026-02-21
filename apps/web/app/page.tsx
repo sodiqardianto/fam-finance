@@ -45,13 +45,17 @@ export default function Home() {
   }, [user, authLoading, router]);
 
   const handleGoogleLogin = async () => {
+    setLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: window.location.origin,
       }
     });
-    if (error) setError(error.message);
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    }
   };
 
   const handleJoin = async (e: React.FormEvent) => {
@@ -171,10 +175,11 @@ export default function Home() {
                 variant="glass"
                 size="xl"
                 onClick={handleGoogleLogin}
+                disabled={loading}
                 className="w-full shadow-xl shadow-zinc-200/50 border border-white/60 bg-white/70 hover:bg-white/90 backdrop-blur-xl group relative overflow-hidden"
-                leftIcon={<Image src="https://www.google.com/favicon.ico" alt="Google" width={20} height={20} className="w-5 h-5 relative z-10" />}
+                leftIcon={loading ? <Loader2 className="w-5 h-5 animate-spin relative z-10" /> : <Image src="https://www.google.com/favicon.ico" alt="Google" width={20} height={20} className="w-5 h-5 relative z-10" />}
               >
-                <span className="relative z-10">Masuk dengan Google</span>
+                <span className="relative z-10">{loading ? "MEMPROSES..." : "Masuk dengan Google"}</span>
                 <div className="absolute inset-0 bg-linear-to-r from-white/0 via-white/50 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
               </Button>
             ) : hasFamily === false ? (

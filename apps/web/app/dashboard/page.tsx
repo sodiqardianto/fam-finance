@@ -85,11 +85,10 @@ export default function Dashboard() {
       if (refreshKey > 0) setIsRefreshing(true);
       
       try {
-        const ts = `_t=${Date.now()}`;
         const [summaryData, txData, savingsData] = await Promise.all([
-          transactionsApi.summary(ts),
-          transactionsApi.list(ts),
-          transactionsApi.savingsGoals.list(ts)
+          transactionsApi.summary(),
+          transactionsApi.list(),
+          transactionsApi.savingsGoals.list()
         ]);
         
         if (!cancelled) {
@@ -282,36 +281,37 @@ export default function Dashboard() {
                 Array.from({ length: 3 }).map((_, i) => (
                   <Skeleton key={i} className="h-24 w-full rounded-[28px] bg-white/40" />
                 ))
-                              ) : recentTransactions.length > 0 ? recentTransactions.map((t) => (
-                                <motion.div 
-                                  key={t.id} 
-                                  className="bg-white/40 backdrop-blur-md p-5 rounded-[28px] border border-white/60 flex items-center justify-between gap-4 hover:bg-white/60 transition-all shadow-sm group cursor-pointer"
-                                  whileHover={{ x: 4 }}
-                                  whileTap={{ scale: 0.98 }}
-                                >
-                                  <div className="flex items-center gap-5 flex-1 min-w-0">
-                                    <div className={cn(
-                                      "p-4 rounded-[20px] shadow-inner transition-transform group-hover:scale-110 shrink-0",
-                                      t.type === "income" ? "bg-emerald-500/10 text-emerald-600" : 
-                                      t.type === "non_financial" ? "bg-pink-500/10 text-pink-600" : "bg-zinc-500/10 text-zinc-600"
-                                    )}>
-                                      {t.type === "income" ? <ArrowUpCircle className="w-6 h-6" /> : 
-                                       t.type === "non_financial" ? <Heart className="w-6 h-6 fill-current" /> : <ArrowDownCircle className="w-6 h-6" />}
-                                    </div>
-                                    <div className="min-w-0">
-                                      <div className="font-extrabold text-zinc-900 group-hover:text-black transition-colors truncate">{t.source || t.category}</div>
-                                      <div className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.15em] mt-0.5 truncate">
-                                        {t.category} • {new Date(t.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className={cn(
-                                    "font-black text-lg text-right tracking-tight shrink-0",
-                                    t.type === "income" ? "text-emerald-600" : t.type === "non_financial" ? "text-pink-600" : "text-zinc-900"
-                                  )}>
-                                    {t.type === 'expense' ? '-' : '+'} Rp {parseFloat(t.amount).toLocaleString("id-ID")}
-                                  </div>
-                                </motion.div>              )) : (
+              ) : recentTransactions.length > 0 ? recentTransactions.map((t) => (
+                <motion.div 
+                  key={t.id} 
+                  className="bg-white/40 backdrop-blur-md p-5 rounded-[28px] border border-white/60 flex items-center justify-between gap-4 hover:bg-white/60 transition-all shadow-sm group cursor-pointer"
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="flex items-center gap-5 flex-1 min-w-0">
+                    <div className={cn(
+                      "p-4 rounded-[20px] shadow-inner transition-transform group-hover:scale-110 shrink-0",
+                      t.type === "income" ? "bg-emerald-500/10 text-emerald-600" : 
+                      t.type === "non_financial" ? "bg-pink-500/10 text-pink-600" : "bg-zinc-500/10 text-zinc-600"
+                    )}>
+                      {t.type === "income" ? <ArrowUpCircle className="w-6 h-6" /> : 
+                       t.type === "non_financial" ? <Heart className="w-6 h-6 fill-current" /> : <ArrowDownCircle className="w-6 h-6" />}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-extrabold text-zinc-900 group-hover:text-black transition-colors truncate">{t.source || t.category}</div>
+                      <div className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.15em] mt-0.5 truncate">
+                        {t.category} • {new Date(t.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                      </div>
+                    </div>
+                  </div>
+                  <div className={cn(
+                    "font-black text-lg text-right tracking-tight shrink-0",
+                    t.type === "income" ? "text-emerald-600" : t.type === "non_financial" ? "text-pink-600" : "text-zinc-900"
+                  )}>
+                    {t.type === 'expense' ? '-' : '+'} Rp {parseFloat(t.amount).toLocaleString("id-ID")}
+                  </div>
+                </motion.div>
+              )) : (
                 <div className="text-center py-12 text-zinc-400 font-bold uppercase tracking-widest text-xs bg-white/20 rounded-[32px] border border-dashed border-white/40">
                   Belum ada transaksi
                 </div>
@@ -344,7 +344,7 @@ export default function Dashboard() {
                 Array.from({ length: 2 }).map((_, i) => (
                   <Skeleton key={i} className="h-32 w-full rounded-3xl bg-white/30" />
                 ))
-  ) : savings.length > 0 ? savings.map((g) => (
+              ) : savings.length > 0 ? savings.map((g) => (
                 <motion.div key={g.id} whileHover={{ y: -2 }}>
                   <div className="p-6 bg-white/30 border border-white/40 rounded-2xl shadow-md">
                     <div className="flex justify-between items-start mb-5">

@@ -1,5 +1,4 @@
 import { supabase } from './supabase';
-import { PostgrestError } from '@supabase/supabase-js';
 
 // Types matched with DB Schema (snake_case)
 interface DbUserRow {
@@ -277,7 +276,7 @@ export const authApi = {
 };
 
 export const transactionsApi = {
-  list: async (cacheBust?: string): Promise<Transaction[]> => {
+  list: async (): Promise<Transaction[]> => {
     const user = await getCurrentDbUser();
     if (!user.family_id) return [];
 
@@ -322,7 +321,7 @@ export const transactionsApi = {
     return mapTransaction(tx as TransactionRow);
   },
 
-  summary: async (cacheBust?: string): Promise<FamilySummaryResponse> => {
+  summary: async (): Promise<FamilySummaryResponse> => {
     const user = await getCurrentDbUser();
     if (!user.family_id) return { familyBalance: 0, myPrivateBalance: 0, totalSavings: 0 };
 
@@ -369,7 +368,7 @@ export const transactionsApi = {
   },
 
   savingsGoals: {
-    list: async (cacheBust?: string): Promise<SavingsGoal[]> => {
+    list: async (): Promise<SavingsGoal[]> => {
       const user = await getCurrentDbUser();
       if (!user.family_id) return [];
 

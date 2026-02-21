@@ -70,8 +70,7 @@ export default function HistoryPage() {
     
     async function loadData() {
       try {
-        const ts = `_t=${Date.now()}`;
-        const txData = await transactionsApi.list(ts);
+        const txData = await transactionsApi.list();
         
         if (!cancelled) {
           setTransactions(txData);

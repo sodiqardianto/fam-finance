@@ -13,7 +13,7 @@ export function useAuth() {
       try {
         const status = await authApi.checkStatus(email);
         if (status.registered) {
-          setDbUser(status.user);
+          setDbUser(status.user ?? null);
         }
       } catch (err) {
         console.error("Failed to fetch DB user", err);

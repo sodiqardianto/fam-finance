@@ -74,8 +74,7 @@ export default function SavingsPage() {
     
     async function loadData() {
       try {
-        const ts = `_t=${Date.now()}`;
-        const savingsData = await transactionsApi.savingsGoals.list(ts);
+        const savingsData = await transactionsApi.savingsGoals.list();
         
         if (!cancelled) {
           setSavings(savingsData);

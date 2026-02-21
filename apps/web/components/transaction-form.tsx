@@ -51,6 +51,24 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
     { value: "savings", label: "Tabungan" },
   ];
 
+  // Helper to format string to thousands separator
+  const formatDisplayAmount = (val: string) => {
+    // Remove all non-digits
+    const clean = val.replace(/\D/g, "");
+    if (!clean) return "";
+    return Number(clean).toLocaleString("id-ID");
+  };
+
+  // Helper to get raw number from formatted string
+  const getRawAmount = (val: string) => {
+    return val.replace(/\D/g, "");
+  };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatDisplayAmount(e.target.value);
+    setAmount(formatted);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !dbUser || !dbUser.familyId) {
@@ -61,10 +79,11 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
     }
     
     setLoading(true);
+    const rawAmount = Number(getRawAmount(amount));
 
     try {
       await transactionsApi.create({
-        amount: Number(amount),
+        amount: rawAmount,
         category,
         description,
         type,
@@ -75,13 +94,13 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
       const typeLabel = type === "income" ? "Pemasukan" : type === "expense" ? "Pengeluaran" : "Kontribusi";
       
       toast.success(`${typeLabel} berhasil dicatat! ❤️`, {
-        description: `Jumlah Rp ${Number(amount).toLocaleString("id-ID")} telah diperbarui di dashboard.`,
+        description: `Jumlah Rp ${rawAmount.toLocaleString("id-ID")} telah diperbarui di dashboard.`,
       });
       
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Gagal mencatat transaksi", {
-        description: error.message,
+        description: error instanceof Error ? error.message : "Terjadi kesalahan yang tidak diketahui",
       });
     } finally {
       setLoading(false);
@@ -117,9 +136,10 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
             {type === "non_financial" ? "Estimasi Nilai (Rp)" : "Jumlah (Rp)"}
           </label>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={handleAmountChange}
             placeholder="0"
             className="w-full h-16 bg-white/50 border border-white/60 rounded-[20px] px-6 focus:outline-none focus:border-zinc-900 transition-all text-2xl font-black placeholder:text-zinc-200"
             required
@@ -143,7 +163,7 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
             <SearchableSelect 
               options={fundSources}
               value={fundSource}
-              onChange={(val) => setFundSource(val as any)}
+              onChange={(val) => setFundSource(val as "family" | "private" | "savings")}
               placeholder="Pilih Sumber Dana"
             />
           </div>

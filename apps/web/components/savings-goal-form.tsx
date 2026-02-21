@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Send } from "lucide-react";
+import { Plus } from "lucide-react";
 import { transactionsApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,9 +34,9 @@ export function SavingsGoalForm({ onSuccess }: SavingsGoalFormProps) {
       });
       
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Gagal membuat tujuan", {
-        description: error.message,
+        description: error instanceof Error ? error.message : "Terjadi kesalahan yang tidak diketahui",
       });
     } finally {
       setLoading(false);

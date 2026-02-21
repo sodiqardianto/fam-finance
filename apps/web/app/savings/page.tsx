@@ -413,10 +413,9 @@ export default function SavingsPage() {
                   <Heart className="w-8 h-8 text-pink-600 fill-current" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-black text-xl text-zinc-900 mb-2">
-                    "Tabungan kecil hari ini, impian besar besok."
-                  </h3>
-                  <p className="text-zinc-600 font-medium">
+                                      <h3 className="font-black text-xl text-zinc-900 mb-2">
+                                        &quot;Tabungan kecil hari ini, impian besar besok.&quot;
+                                      </h3>                  <p className="text-zinc-600 font-medium">
                     Teruskan semangat menabung bersama! Setiap rupiah yang tersimpan adalah langkah menuju impian kalian.
                   </p>
                 </div>

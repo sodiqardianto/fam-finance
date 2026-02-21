@@ -35,7 +35,7 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // ============================================
 // JWKS Initialization
 // ============================================
-const JWKS_URL = SUPABASE_URL ? `${SUPABASE_URL}/.well-known/jwks.json` : '';
+const JWKS_URL = SUPABASE_URL ? `${SUPABASE_URL}/auth/v1/.well-known/jwks.json` : '';
 let JWKS: ReturnType<typeof createRemoteJWKSet> | null = null;
 let jwksInitialized = false;
 let jwksError: string | null = null;

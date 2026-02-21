@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
@@ -14,7 +15,7 @@ import {
   TrendingUp,
   Heart,
   Loader2,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, Variants } from "framer-motion";
@@ -269,9 +270,11 @@ export default function Dashboard() {
           <motion.div className="lg:col-span-2 space-y-8" variants={itemVariants}>
             <div className="flex items-center justify-between px-1">
               <h2 className="text-2xl font-black text-zinc-900 tracking-tight">Transaksi Terakhir</h2>
-              <Button variant="ghost" size="sm" className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">
-                Lihat Semua <ChevronRight className="w-3 h-3 ml-1" />
-              </Button>
+              <Link href="/history">
+                <Button variant="ghost" size="sm" className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">
+                  Lihat Semua <ChevronRight className="w-3 h-3 ml-1" />
+                </Button>
+              </Link>
             </div>
             
             <div className="space-y-4">
@@ -279,37 +282,36 @@ export default function Dashboard() {
                 Array.from({ length: 3 }).map((_, i) => (
                   <Skeleton key={i} className="h-24 w-full rounded-[28px] bg-white/40" />
                 ))
-              ) : recentTransactions.length > 0 ? recentTransactions.map((t) => (
-                <motion.div 
-                  key={t.id} 
-                  className="bg-white/40 backdrop-blur-md p-5 rounded-[28px] border border-white/60 flex items-center justify-between hover:bg-white/60 transition-all shadow-sm group cursor-pointer"
-                  whileHover={{ x: 4 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="flex items-center gap-5">
-                    <div className={cn(
-                      "p-4 rounded-[20px] shadow-inner transition-transform group-hover:scale-110",
-                      t.type === "income" ? "bg-emerald-500/10 text-emerald-600" : 
-                      t.type === "non_financial" ? "bg-pink-500/10 text-pink-600" : "bg-zinc-500/10 text-zinc-600"
-                    )}>
-                      {t.type === "income" ? <ArrowUpCircle className="w-6 h-6" /> : 
-                       t.type === "non_financial" ? <Heart className="w-6 h-6 fill-current" /> : <ArrowDownCircle className="w-6 h-6" />}
-                    </div>
-                    <div>
-                      <div className="font-extrabold text-zinc-900 group-hover:text-black transition-colors">{t.source || t.category}</div>
-                      <div className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.15em] mt-0.5">
-                        {t.category} • {new Date(t.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
-                      </div>
-                    </div>
-                  </div>
-                  <div className={cn(
-                    "font-black text-lg text-right tracking-tight",
-                    t.type === "income" ? "text-emerald-600" : t.type === "non_financial" ? "text-pink-600" : "text-zinc-900"
-                  )}>
-                    {t.type === 'expense' ? '-' : '+'} Rp {parseFloat(t.amount).toLocaleString("id-ID")}
-                  </div>
-                </motion.div>
-              )) : (
+                              ) : recentTransactions.length > 0 ? recentTransactions.map((t) => (
+                                <motion.div 
+                                  key={t.id} 
+                                  className="bg-white/40 backdrop-blur-md p-5 rounded-[28px] border border-white/60 flex items-center justify-between gap-4 hover:bg-white/60 transition-all shadow-sm group cursor-pointer"
+                                  whileHover={{ x: 4 }}
+                                  whileTap={{ scale: 0.98 }}
+                                >
+                                  <div className="flex items-center gap-5 flex-1 min-w-0">
+                                    <div className={cn(
+                                      "p-4 rounded-[20px] shadow-inner transition-transform group-hover:scale-110 shrink-0",
+                                      t.type === "income" ? "bg-emerald-500/10 text-emerald-600" : 
+                                      t.type === "non_financial" ? "bg-pink-500/10 text-pink-600" : "bg-zinc-500/10 text-zinc-600"
+                                    )}>
+                                      {t.type === "income" ? <ArrowUpCircle className="w-6 h-6" /> : 
+                                       t.type === "non_financial" ? <Heart className="w-6 h-6 fill-current" /> : <ArrowDownCircle className="w-6 h-6" />}
+                                    </div>
+                                    <div className="min-w-0">
+                                      <div className="font-extrabold text-zinc-900 group-hover:text-black transition-colors truncate">{t.source || t.category}</div>
+                                      <div className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.15em] mt-0.5 truncate">
+                                        {t.category} • {new Date(t.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className={cn(
+                                    "font-black text-lg text-right tracking-tight shrink-0",
+                                    t.type === "income" ? "text-emerald-600" : t.type === "non_financial" ? "text-pink-600" : "text-zinc-900"
+                                  )}>
+                                    {t.type === 'expense' ? '-' : '+'} Rp {parseFloat(t.amount).toLocaleString("id-ID")}
+                                  </div>
+                                </motion.div>              )) : (
                 <div className="text-center py-12 text-zinc-400 font-bold uppercase tracking-widest text-xs bg-white/20 rounded-[32px] border border-dashed border-white/40">
                   Belum ada transaksi
                 </div>

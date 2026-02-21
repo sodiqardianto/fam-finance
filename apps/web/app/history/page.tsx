@@ -14,18 +14,20 @@ import {
   Search,
   Loader2,
   Wallet,
-  User,
-  X
+  X,
+  TrendingUp,
+  TrendingDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, Variants, AnimatePresence } from "framer-motion";
 import { transactionsApi, Transaction } from "@/lib/api";
+import { FinanceCard } from "@/components/finance-card";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.05 }
+    transition: { staggerChildren: 0.1 }
   }
 };
 
@@ -232,7 +234,7 @@ export default function HistoryPage() {
   return (
     <div className="min-h-screen p-6 md:p-12 font-sans relative text-zinc-900">
       <motion.div 
-        className="max-w-4xl mx-auto pb-24 md:pb-0"
+        className="max-w-6xl mx-auto pb-24 md:pb-0"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
@@ -253,21 +255,66 @@ export default function HistoryPage() {
 
         {/* Stats Cards */}
         <motion.div 
-          className="grid grid-cols-3 gap-4 mb-8"
+          className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12"
           variants={itemVariants}
         >
-          <div className="bg-emerald-500/10 border border-emerald-200/50 rounded-2xl p-4 backdrop-blur-sm">
-            <div className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] mb-1">Pemasukan</div>
-            <div className="text-lg font-black text-emerald-700">Rp {stats.income.toLocaleString('id-ID')}</div>
-          </div>
-          <div className="bg-rose-500/10 border border-rose-200/50 rounded-2xl p-4 backdrop-blur-sm">
-            <div className="text-[10px] font-black text-rose-600 uppercase tracking-[0.2em] mb-1">Pengeluaran</div>
-            <div className="text-lg font-black text-rose-700">Rp {stats.expense.toLocaleString('id-ID')}</div>
-          </div>
-          <div className="bg-pink-500/10 border border-pink-200/50 rounded-2xl p-4 backdrop-blur-sm">
-            <div className="text-[10px] font-black text-pink-600 uppercase tracking-[0.2em] mb-1">Kontribusi</div>
-            <div className="text-lg font-black text-pink-700">{stats.nonFinancial}</div>
-          </div>
+          <FinanceCard
+            title="Pemasukan"
+            value={stats.income}
+            isLoading={dataLoading}
+            animate={true}
+            animationKey={refreshKey}
+            icon={ArrowUpCircle}
+            iconClassName="text-emerald-900"
+            cardClassName="bg-emerald-500/10 border-emerald-200/50 shadow-xl shadow-emerald-500/5"
+            titleClassName="text-emerald-600"
+            valueClassName="text-emerald-900"
+            badge={
+              <div className="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-emerald-500/20 backdrop-blur-md">
+                <TrendingUp className="w-3 h-3" />
+                <span>Total Masuk</span>
+              </div>
+            }
+          />
+
+          <FinanceCard
+            title="Pengeluaran"
+            value={stats.expense}
+            isLoading={dataLoading}
+            animate={true}
+            animationKey={refreshKey}
+            icon={ArrowDownCircle}
+            iconClassName="text-rose-900"
+            cardClassName="bg-rose-500/10 border-rose-200/50 shadow-xl shadow-rose-500/5"
+            titleClassName="text-rose-600"
+            valueClassName="text-rose-900"
+            badge={
+              <div className="inline-flex items-center gap-1.5 bg-rose-500/20 text-rose-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-rose-500/20 backdrop-blur-md">
+                <TrendingDown className="w-3 h-3" />
+                <span>Total Keluar</span>
+              </div>
+            }
+          />
+
+          <FinanceCard
+            title="Kontribusi"
+            value={stats.nonFinancial}
+            isLoading={dataLoading}
+            animate={true}
+            animationKey={refreshKey}
+            prefix=""
+            icon={Heart}
+            iconClassName="text-pink-900"
+            cardClassName="bg-pink-500/10 border-pink-200/50 shadow-xl shadow-pink-500/5"
+            titleClassName="text-pink-600"
+            valueClassName="text-pink-900"
+            badge={
+              <div className="inline-flex items-center gap-1.5 bg-pink-500/20 text-pink-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-pink-500/20 backdrop-blur-md">
+                <Heart className="w-3 h-3 fill-current" />
+                <span>Non-Finansial</span>
+              </div>
+            }
+          />
         </motion.div>
 
         {/* Search & Filter */}
@@ -388,25 +435,25 @@ export default function HistoryPage() {
                             "bg-white/40 border-white/60 hover:bg-white/60 hover:shadow-lg"
                           )}
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4 flex-1 min-w-0">
                               <div className={cn(
-                                "p-3.5 rounded-2xl shadow-inner transition-transform group-hover:scale-110",
+                                "p-3.5 rounded-2xl shadow-inner transition-transform group-hover:scale-110 flex-shrink-0",
                                 colors.bg,
                                 colors.text
                               )}>
                                 {getTransactionIcon(transaction.type)}
                               </div>
-                              <div>
-                                <div className="font-extrabold text-zinc-900 text-lg">
+                              <div className="min-w-0">
+                                <div className="font-extrabold text-zinc-900 text-lg truncate">
                                   {transaction.source || transaction.category}
                                 </div>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.15em]">
+                                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.15em] truncate">
                                     {transaction.category}
                                   </span>
                                   {transaction.fundSource === 'private' && (
-                                    <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-full">
+                                    <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-full flex-shrink-0">
                                       Pribadi
                                     </span>
                                   )}
@@ -418,9 +465,9 @@ export default function HistoryPage() {
                                 )}
                               </div>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right flex-shrink-0">
                               <div className={cn(
-                                "font-black text-xl",
+                                "font-black text-lg sm:text-xl",
                                 colors.amount
                               )}>
                                 {getAmountPrefix(transaction.type)} Rp {parseFloat(transaction.amount).toLocaleString('id-ID')}

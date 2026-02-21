@@ -49,7 +49,7 @@ app.get('/health', async (c) => {
 // Debug endpoint untuk cek JWKS
 app.get('/debug/jwks', async (c) => {
   const supabaseUrl = process.env.SUPABASE_URL;
-  const jwksUrl = supabaseUrl ? `${supabaseUrl}/.well-known/jwks.json` : null;
+  const jwksUrl = supabaseUrl ? `${supabaseUrl}/auth/v1/.well-known/jwks.json` : null;
   
   try {
     if (!jwksUrl) {

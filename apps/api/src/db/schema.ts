@@ -16,7 +16,7 @@ export const families = pgTable('families', {
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
-  supabaseUid: text('supabase_uid').notNull().unique(), // Link ke Supabase Auth
+  externalId: text('external_id').notNull().unique(), // Google ID or other provider ID
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   familyId: uuid('family_id').references(() => families.id),

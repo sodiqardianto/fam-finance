@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { Heart, Users, Shield, ArrowRight, Loader2, Copy } from "lucide-react";
 import { authApi } from "@/lib/api";
-import { supabase } from "@/lib/supabase";
+import { signIn } from "next-auth/react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -46,14 +46,10 @@ export default function Home() {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin,
-      }
-    });
-    if (error) {
-      setError(error.message);
+    try {
+      await signIn('google');
+    } catch (err: any) {
+      setError(err.message);
       setLoading(false);
     }
   };
@@ -70,7 +66,7 @@ export default function Home() {
     setError("");
     
     try {
-      const name = user.user_metadata?.full_name || user.email || "Partner";
+      const name = user.name || user.email || "Partner";
       const email = user.email || "";
       
       await authApi.join(name, email, inviteCode);
@@ -92,7 +88,7 @@ export default function Home() {
     setError("");
     
     try {
-      const name = user.user_metadata?.full_name || user.email || "User";
+      const name = user.name || user.email || "User";
       const email = user.email || "";
 
       const result = await authApi.register(name, email);
@@ -202,7 +198,7 @@ export default function Home() {
                       value={inviteCode}
                       disabled={loading}
                       onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                      className="w-full h-16 bg-white/60 backdrop-blur-md border border-white/40 rounded-[32px] px-6 pr-14 focus:outline-none focus:border-pink-500 transition-all text-lg font-bold placeholder:text-zinc-400 disabled:opacity-50"
+                      className="w-full h-16 bg-white/60 backdrop-blur-md border border-white/40 rounded-[32px] px-8 pr-16 focus:outline-none focus:border-pink-500 transition-all text-lg font-bold placeholder:text-zinc-400 disabled:opacity-50"
                     />
                     <button 
                       type="submit"

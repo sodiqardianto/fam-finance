@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/lib/supabase";
+import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,8 +33,7 @@ export default function ProfilePage() {
   }, [user, loading, router]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/");
+    await signOut({ callbackUrl: "/" });
   };
 
   if (loading || (!user && typeof window !== "undefined")) {
@@ -82,9 +81,9 @@ export default function ProfilePage() {
               <CardContent className="pt-0 -mt-14 flex flex-col items-center relative z-10 p-6">
                 <div className="relative group mb-5">
                   <div className="w-28 h-28 rounded-[36px] border-4 border-white/80 bg-white overflow-hidden shadow-2xl transition-transform group-hover:scale-105 duration-500 flex items-center justify-center">
-                    {user.user_metadata.avatar_url ? (
+                    {user.image ? (
                       <Image 
-                        src={user.user_metadata.avatar_url} 
+                        src={user.image} 
                         alt="Avatar" 
                         width={112} 
                         height={112}
@@ -101,7 +100,7 @@ export default function ProfilePage() {
                 
                 <div className="text-center w-full">
                   <h2 className="text-2xl font-black text-zinc-900 tracking-tight truncate">
-                    {user.user_metadata.full_name || "User"}
+                    {user.name || "User"}
                   </h2>
                   <div className="flex items-center justify-center gap-1.5 text-zinc-500 mt-1">
                     <Mail className="w-3.5 h-3.5" />

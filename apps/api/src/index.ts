@@ -3,7 +3,7 @@ import { cors } from 'hono/cors'
 import { db } from './db'
 import { families, users, transactions, savingsGoals } from './db/schema'
 import { eq, desc } from 'drizzle-orm'
-import { authMiddleware, getSupabaseUid, getUserEmail, getUserName, getAvatarUrl } from './middleware/auth'
+import { authMiddleware, getExternalId, getUserEmail, getUserName, getAvatarUrl } from './middleware/auth'
 
 const app = new Hono()
 
@@ -17,7 +17,7 @@ app.use('*', cors({
 }))
 
 app.get('/', (c) => {
-  return c.text('Fam Finance API - Local PostgreSQL + Supabase Auth')
+  return c.text('Fam Finance API - Local PostgreSQL')
 })
 
 app.get('/health', async (c) => {
@@ -26,56 +26,16 @@ app.get('/health', async (c) => {
     return c.json({ 
       status: 'ok', 
       database: 'connected',
-      provider: process.env.DATABASE_PROVIDER || 'local',
-      mode: process.env.DATABASE_PROVIDER === 'supabase' 
-        ? 'supabase_postgres_with_supabase_auth'
-        : 'local_postgres_with_supabase_auth',
       env: {
-        databaseProvider: process.env.DATABASE_PROVIDER || 'local',
-        supabaseUrl: process.env.SUPABASE_URL ? 'configured' : 'missing',
-        supabaseAnonKey: process.env.SUPABASE_ANON_KEY ? 'configured' : 'missing',
+        nodeEnv: process.env.NODE_ENV || 'development'
       }
     })
   } catch (error: any) {
     return c.json({ 
       status: 'error', 
       database: 'disconnected', 
-      provider: process.env.DATABASE_PROVIDER || 'local',
       message: error.message 
     }, 500)
-  }
-})
-
-// Debug endpoint untuk cek JWKS
-app.get('/debug/jwks', async (c) => {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const jwksUrl = supabaseUrl ? `${supabaseUrl}/auth/v1/.well-known/jwks.json` : null;
-  
-  try {
-    if (!jwksUrl) {
-      return c.json({ error: 'SUPABASE_URL not configured' }, 500);
-    }
-    
-    const response = await fetch(jwksUrl);
-    const jwksData = await response.json();
-    
-    return c.json({
-      jwksUrl,
-      status: response.status,
-      keys: jwksData.keys?.length || 0,
-      sample: jwksData.keys?.[0] ? {
-        kty: jwksData.keys[0].kty,
-        kid: jwksData.keys[0].kid,
-        alg: jwksData.keys[0].alg,
-      } : null,
-    });
-  } catch (error: any) {
-    return c.json({ 
-      error: 'Failed to fetch JWKS', 
-      message: error.message,
-      jwksUrl,
-      supabaseUrl: supabaseUrl || 'NOT SET'
-    }, 500);
   }
 })
 
@@ -104,15 +64,13 @@ app.get('/auth/status', async (c) => {
     console.error('Database error in /auth/status:', error)
     return c.json({ 
       error: 'Failed to check status', 
-      message: error.message,
-      code: error.code,
-      details: error.detail || 'No extra details'
+      message: error.message
     }, 500)
   }
 })
 
 // ============================================
-// PROTECTED ENDPOINTS (Require Supabase Auth)
+// PROTECTED ENDPOINTS (Require Auth Token)
 // ============================================
 
 // Apply auth middleware to protected routes
@@ -122,20 +80,20 @@ app.use('/family/*', authMiddleware)
 app.use('/transactions/*', authMiddleware)
 app.use('/savings-goals/*', authMiddleware)
 
-// Registration for the first partner (with Supabase Auth)
+// Registration for the first partner
 app.post('/auth/register', async (c) => {
-  const supabaseUid = getSupabaseUid(c)
+  const externalId = getExternalId(c)
   const email = getUserEmail(c)
   const name = getUserName(c) || email?.split('@')[0] || 'User'
   const avatarUrl = getAvatarUrl(c)
   
-  if (!supabaseUid || !email) {
+  if (!externalId || !email) {
     return c.json({ error: 'Invalid authentication' }, 401)
   }
 
   try {
     // Check if user already exists
-    const [existingUser] = await db.select().from(users).where(eq(users.supabaseUid, supabaseUid))
+    const [existingUser] = await db.select().from(users).where(eq(users.externalId, externalId))
     if (existingUser) {
       return c.json({ error: 'User already registered' }, 400)
     }
@@ -148,9 +106,9 @@ app.post('/auth/register', async (c) => {
       inviteExpiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     }).returning()
 
-    // 2. Create User with Supabase UID
+    // 2. Create User
     const [newUser] = await db.insert(users).values({
-      supabaseUid,
+      externalId,
       name,
       email,
       familyId: newFamily.id,
@@ -168,14 +126,14 @@ app.post('/auth/register', async (c) => {
   }
 })
 
-// Join family using invite code (with Supabase Auth)
+// Join family using invite code
 app.post('/auth/join', async (c) => {
-  const supabaseUid = getSupabaseUid(c)
+  const externalId = getExternalId(c)
   const email = getUserEmail(c)
   const name = getUserName(c) || email?.split('@')[0] || 'User'
   const avatarUrl = getAvatarUrl(c)
   
-  if (!supabaseUid || !email) {
+  if (!externalId || !email) {
     return c.json({ error: 'Invalid authentication' }, 401)
   }
 
@@ -186,7 +144,7 @@ app.post('/auth/join', async (c) => {
 
   try {
     // Check if user already exists
-    const [existingUser] = await db.select().from(users).where(eq(users.supabaseUid, supabaseUid))
+    const [existingUser] = await db.select().from(users).where(eq(users.externalId, externalId))
     if (existingUser) {
       return c.json({ error: 'User already registered' }, 400)
     }
@@ -202,9 +160,9 @@ app.post('/auth/join', async (c) => {
       return c.json({ error: 'Invite code expired' }, 400)
     }
 
-    // 2. Create User with Supabase UID and link to family
+    // 2. Create User linked to family
     const [newUser] = await db.insert(users).values({
-      supabaseUid,
+      externalId,
       name,
       email,
       familyId: family.id,
@@ -223,14 +181,14 @@ app.post('/auth/join', async (c) => {
 
 // Get current user info (protected)
 app.get('/auth/me', authMiddleware, async (c) => {
-  const supabaseUid = getSupabaseUid(c)
+  const externalId = getExternalId(c)
   
-  if (!supabaseUid) {
+  if (!externalId) {
     return c.json({ error: 'Invalid authentication' }, 401)
   }
 
   try {
-    const [user] = await db.select().from(users).where(eq(users.supabaseUid, supabaseUid))
+    const [user] = await db.select().from(users).where(eq(users.externalId, externalId))
     
     if (!user) {
       return c.json({ error: 'User not found' }, 404)
@@ -246,12 +204,12 @@ app.get('/auth/me', authMiddleware, async (c) => {
 // --- DASHBOARD & SUMMARY ENDPOINTS ---
 
 app.get('/family/summary', async (c) => {
-  const supabaseUid = getSupabaseUid(c)
-  if (!supabaseUid) return c.json({ error: 'Unauthorized' }, 401)
+  const externalId = getExternalId(c)
+  if (!externalId) return c.json({ error: 'Unauthorized' }, 401)
 
   try {
     // Get user from local DB
-    const [user] = await db.select().from(users).where(eq(users.supabaseUid, supabaseUid))
+    const [user] = await db.select().from(users).where(eq(users.externalId, externalId))
     if (!user || !user.familyId) {
       return c.json({ error: 'User or family not found' }, 404)
     }
@@ -287,19 +245,18 @@ app.get('/family/summary', async (c) => {
     console.error('Database error in /family/summary:', error)
     return c.json({ 
       error: 'Failed to fetch summary',
-      message: error.message,
-      code: error.code
+      message: error.message
     }, 500)
   }
 })
 
 app.get('/savings-goals', async (c) => {
-  const supabaseUid = getSupabaseUid(c)
-  if (!supabaseUid) return c.json({ error: 'Unauthorized' }, 401)
+  const externalId = getExternalId(c)
+  if (!externalId) return c.json({ error: 'Unauthorized' }, 401)
 
   try {
     // Get user from local DB
-    const [user] = await db.select().from(users).where(eq(users.supabaseUid, supabaseUid))
+    const [user] = await db.select().from(users).where(eq(users.externalId, externalId))
     if (!user || !user.familyId) {
       return c.json({ error: 'User or family not found' }, 404)
     }
@@ -310,15 +267,14 @@ app.get('/savings-goals', async (c) => {
     console.error('Database error in GET /savings-goals:', error)
     return c.json({ 
       error: 'Failed to fetch savings goals',
-      message: error.message,
-      code: error.code
+      message: error.message
     }, 500)
   }
 })
 
 app.post('/savings-goals', async (c) => {
-  const supabaseUid = getSupabaseUid(c)
-  if (!supabaseUid) return c.json({ error: 'Unauthorized' }, 401)
+  const externalId = getExternalId(c)
+  if (!externalId) return c.json({ error: 'Unauthorized' }, 401)
 
   const body = await c.req.json()
   const { name, targetAmount } = body
@@ -329,7 +285,7 @@ app.post('/savings-goals', async (c) => {
 
   try {
     // Get user from local DB
-    const [user] = await db.select().from(users).where(eq(users.supabaseUid, supabaseUid))
+    const [user] = await db.select().from(users).where(eq(users.externalId, externalId))
     if (!user || !user.familyId) {
       return c.json({ error: 'User or family not found' }, 404)
     }
@@ -353,12 +309,12 @@ app.post('/savings-goals', async (c) => {
 
 // Get family transactions
 app.get('/transactions', async (c) => {
-  const supabaseUid = getSupabaseUid(c)
-  if (!supabaseUid) return c.json({ error: 'Unauthorized' }, 401)
+  const externalId = getExternalId(c)
+  if (!externalId) return c.json({ error: 'Unauthorized' }, 401)
 
   try {
     // Get user from local DB
-    const [user] = await db.select().from(users).where(eq(users.supabaseUid, supabaseUid))
+    const [user] = await db.select().from(users).where(eq(users.externalId, externalId))
     if (!user || !user.familyId) {
       return c.json({ error: 'User or family not found' }, 404)
     }
@@ -377,8 +333,8 @@ app.get('/transactions', async (c) => {
 
 // Create transaction
 app.post('/transactions', async (c) => {
-  const supabaseUid = getSupabaseUid(c)
-  if (!supabaseUid) return c.json({ error: 'Unauthorized' }, 401)
+  const externalId = getExternalId(c)
+  if (!externalId) return c.json({ error: 'Unauthorized' }, 401)
 
   const body = await c.req.json()
   const { amount, source, category, description, type, fundSource } = body
@@ -389,7 +345,7 @@ app.post('/transactions', async (c) => {
 
   try {
     // Get user from local DB
-    const [user] = await db.select().from(users).where(eq(users.supabaseUid, supabaseUid))
+    const [user] = await db.select().from(users).where(eq(users.externalId, externalId))
     if (!user || !user.familyId) {
       return c.json({ error: 'User or family not found' }, 404)
     }
@@ -410,9 +366,7 @@ app.post('/transactions', async (c) => {
     console.error('Database error in POST /transactions:', error)
     return c.json({ 
       error: 'Failed to create transaction', 
-      message: error.message,
-      code: error.code,
-      details: error.detail || 'No extra details'
+      message: error.message
     }, 500)
   }
 })

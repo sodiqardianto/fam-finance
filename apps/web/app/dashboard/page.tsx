@@ -172,7 +172,7 @@ export default function Dashboard() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 drop-shadow-sm">
-                Halo, {user.user_metadata.full_name?.split(' ')[0] || 'Partner'} 👋
+                Halo, {user.name?.split(' ')[0] || 'Partner'} 👋
               </h1>
               {isRefreshing && <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />}
             </div>

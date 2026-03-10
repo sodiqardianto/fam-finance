@@ -406,7 +406,7 @@ export default function SavingsPage() {
         {/* Motivation Card */}
         {!dataLoading && savings.length > 0 && (
           <motion.div variants={itemVariants} className="mt-12">
-            <div className="bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-white/40 rounded-[32px] p-8 relative overflow-hidden shadow-xl">
+            <div className="bg-linear-to-br from-pink-500/20 to-purple-500/20 border border-white/40 rounded-[32px] p-8 relative overflow-hidden shadow-xl">
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
                 <div className="bg-white/60 p-4 rounded-full backdrop-blur-xl border border-white/40 shadow-lg">
                   <Heart className="w-8 h-8 text-pink-600 fill-current" />

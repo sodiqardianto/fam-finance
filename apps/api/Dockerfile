@@ -1,26 +1,25 @@
 FROM oven/bun:1.1-slim AS base
 WORKDIR /app
 
-# Install dependencies
+# Tahap Install
 FROM base AS install
 RUN mkdir -p /temp/dev
-# Gunakan wildcard agar mendukung bun.lock maupun bun.lockb
-COPY package.json bun.lock* /temp/dev/
+# COPY secara eksplisit dari direktori saat ini
+COPY package.json /temp/dev/
+COPY bun.lock* /temp/dev/
 RUN cd /temp/dev && bun install --frozen-lockfile
 
-# Copy node_modules and source code
+# Tahap Prerelease
 FROM base AS prerelease
 COPY --from=install /temp/dev/node_modules node_modules
 COPY . .
 
-# Final stage
+# Tahap Akhir (Release)
 FROM base AS release
-COPY --from=prerelease /app/src /app/src
+WORKDIR /app
+COPY --from=prerelease /app/src ./src
 COPY --from=prerelease /app/package.json .
-COPY --from=prerelease /app/node_modules node_modules
+COPY --from=prerelease /app/node_modules ./node_modules
 
-# Expose port
 EXPOSE 3000
-
-# Run the app
 CMD ["bun", "run", "src/index.ts"]

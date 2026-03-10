@@ -4,7 +4,8 @@ WORKDIR /app
 # Install dependencies
 FROM base AS install
 RUN mkdir -p /temp/dev
-COPY package.json bun.lock /temp/dev/
+# Gunakan wildcard agar mendukung bun.lock maupun bun.lockb
+COPY package.json bun.lock* /temp/dev/
 RUN cd /temp/dev && bun install --frozen-lockfile
 
 # Build stage

@@ -1,6 +1,13 @@
 import { getSession } from "next-auth/react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3010";
+
+type SessionUser = {
+  id?: string | null;
+  email?: string | null;
+  name?: string | null;
+  image?: string | null;
+};
 
 // Types
 export interface DbUser {
@@ -49,8 +56,8 @@ export interface Transaction {
   source: string | null;
   category: string;
   description: string | null;
-  type: 'income' | 'expense' | 'non_financial';
-  fundSource: 'family' | 'private' | 'savings';
+  type: "income" | "expense" | "non_financial";
+  fundSource: "family" | "private" | "savings";
   date: string;
   createdAt: string;
 }
@@ -67,33 +74,40 @@ export interface SavingsGoal {
 }
 
 // Helpers
-const getAuthHeaders = async () => {
+const getAuthHeaders = async (): Promise<Record<string, string>> => {
   const session = await getSession();
   if (!session || !session.user) return {};
-  
-  // In a real production app with NextAuth, the actual JWT is in a httpOnly cookie.
-  // For this decoupled backend, we'll send a token that the backend can understand.
-  // For development, we send a base64 encoded JSON as a "token" that our middleware can decode.
-  
-  const mockToken = btoa(JSON.stringify({
-    sub: (session.user as any).id || session.user.email,
-    email: session.user.email,
-    name: session.user.name,
-    picture: session.user.image,
-    iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60)
-  }));
+
+  const sessionUser = session.user as SessionUser;
+  const subject = sessionUser.id ?? sessionUser.email;
+
+  if (!subject) {
+    return {};
+  }
+
+  const mockToken = btoa(
+    JSON.stringify({
+      sub: subject,
+      email: sessionUser.email,
+      name: sessionUser.name,
+      picture: sessionUser.image,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
+    }),
+  );
 
   return {
-    'Authorization': `Bearer ${mockToken}`,
-    'Content-Type': 'application/json',
+    Authorization: `Bearer ${mockToken}`,
+    "Content-Type": "application/json",
   };
 };
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    throw new Error(
+      errorData.error || `HTTP error! status: ${response.status}`,
+    );
   }
   return response.json();
 }
@@ -101,24 +115,30 @@ async function handleResponse<T>(response: Response): Promise<T> {
 // API Implementation
 export const authApi = {
   checkStatus: async (email: string): Promise<UserStatusResponse> => {
-    const response = await fetch(`${API_URL}/auth/status?email=${encodeURIComponent(email)}`);
+    const response = await fetch(
+      `${API_URL}/auth/status?email=${encodeURIComponent(email)}`,
+    );
     return handleResponse<UserStatusResponse>(response);
   },
 
   register: async (name: string, email: string): Promise<AuthResponse> => {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_URL}/auth/register`, {
-      method: 'POST',
+      method: "POST",
       headers,
       body: JSON.stringify({ name, email }),
     });
     return handleResponse<AuthResponse>(response);
   },
 
-  join: async (name: string, email: string, inviteCode: string): Promise<AuthResponse> => {
+  join: async (
+    name: string,
+    email: string,
+    inviteCode: string,
+  ): Promise<AuthResponse> => {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_URL}/auth/join`, {
-      method: 'POST',
+      method: "POST",
       headers,
       body: JSON.stringify({ name, email, inviteCode }),
     });
@@ -148,12 +168,12 @@ export const transactionsApi = {
     source?: string;
     category: string;
     description?: string;
-    type: 'income' | 'expense' | 'non_financial';
-    fundSource: 'family' | 'private' | 'savings';
+    type: "income" | "expense" | "non_financial";
+    fundSource: "family" | "private" | "savings";
   }): Promise<Transaction> => {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_URL}/transactions`, {
-      method: 'POST',
+      method: "POST",
       headers,
       body: JSON.stringify(data),
     });
@@ -177,10 +197,13 @@ export const transactionsApi = {
       return handleResponse<SavingsGoal[]>(response);
     },
 
-    create: async (data: { name: string; targetAmount: number }): Promise<SavingsGoal> => {
+    create: async (data: {
+      name: string;
+      targetAmount: number;
+    }): Promise<SavingsGoal> => {
       const headers = await getAuthHeaders();
       const response = await fetch(`${API_URL}/savings-goals`, {
-        method: 'POST',
+        method: "POST",
         headers,
         body: JSON.stringify(data),
       });

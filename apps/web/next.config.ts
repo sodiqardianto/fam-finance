@@ -4,14 +4,25 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'www.google.com',
+        protocol: "https",
+        hostname: "www.google.com",
+        port: "",
+        pathname: "/favicon.ico",
       },
       {
-        protocol: 'https',
-        hostname: 'lh3.googleusercontent.com',
+        protocol: "https",
+        hostname: "www.google.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        port: "",
+        pathname: "/**",
       },
     ],
+    domains: ["www.google.com", "lh3.googleusercontent.com"],
   },
 };
 

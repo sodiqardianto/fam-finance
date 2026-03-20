@@ -461,4 +461,10 @@ app.post("/transactions", async (c) => {
   }
 });
 
-export default app;
+// Start server with port from env or default to 3010
+const port = parseInt(process.env.PORT || "3010", 10);
+
+export default {
+  port,
+  fetch: app.fetch,
+};

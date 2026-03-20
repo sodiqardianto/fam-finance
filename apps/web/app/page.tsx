@@ -7,9 +7,11 @@ import { authApi } from "@/lib/api";
 import { signIn } from "next-auth/react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import Image, { type ImageLoaderProps } from "next/image";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+
+const passthroughImageLoader = ({ src }: ImageLoaderProps) => src;
 
 export default function Home() {
   const router = useRouter();
@@ -38,7 +40,7 @@ export default function Home() {
         }
       }
     }
-    
+
     if (user && !authLoading) {
       checkUserStatus();
     }
@@ -47,7 +49,7 @@ export default function Home() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      await signIn('google');
+      await signIn("google");
     } catch (err: any) {
       setError(err.message);
       setLoading(false);
@@ -61,14 +63,14 @@ export default function Home() {
       return;
     }
     if (!inviteCode) return;
-    
+
     setLoading(true);
     setError("");
-    
+
     try {
       const name = user.name || user.email || "Partner";
       const email = user.email || "";
-      
+
       await authApi.join(name, email, inviteCode);
       router.push("/dashboard");
     } catch (err: any) {
@@ -86,18 +88,20 @@ export default function Home() {
 
     setLoading(true);
     setError("");
-    
+
     try {
       const name = user.name || user.email || "User";
       const email = user.email || "";
 
       const result = await authApi.register(name, email);
       const inviteCode = result.inviteCode ?? "";
-      
+
       toast.success(
         <div className="flex flex-col gap-2">
           <span className="font-bold">🎉 Keluarga berhasil dibuat!</span>
-          <span className="text-xs text-zinc-500">Bagikan kode ini ke pasanganmu:</span>
+          <span className="text-xs text-zinc-500">
+            Bagikan kode ini ke pasanganmu:
+          </span>
           <button
             onClick={() => {
               navigator.clipboard.writeText(inviteCode);
@@ -112,9 +116,9 @@ export default function Home() {
         {
           duration: 10000, // 10 detik
           icon: null,
-        }
+        },
       );
-      
+
       // Delay redirect agar user bisa lihat kode
       setTimeout(() => {
         router.push("/dashboard");
@@ -134,11 +138,17 @@ export default function Home() {
           <div className="bg-linear-to-br from-pink-500 to-rose-600 p-2 rounded-xl shadow-lg shadow-pink-500/20">
             <Heart className="w-5 h-5 text-white fill-current" />
           </div>
-          <span className="font-bold text-xl tracking-tight text-zinc-900">Fam Finance</span>
+          <span className="font-bold text-xl tracking-tight text-zinc-900">
+            Fam Finance
+          </span>
         </div>
         <nav className="hidden md:flex gap-8 text-sm font-bold text-zinc-500 uppercase tracking-wider">
-          <a href="#features" className="hover:text-pink-600 transition-colors">Fitur</a>
-          <a href="#about" className="hover:text-pink-600 transition-colors">Tentang Kami</a>
+          <a href="#features" className="hover:text-pink-600 transition-colors">
+            Fitur
+          </a>
+          <a href="#about" className="hover:text-pink-600 transition-colors">
+            Tentang Kami
+          </a>
         </nav>
       </header>
 
@@ -153,34 +163,53 @@ export default function Home() {
             Didesain Khusus untuk Pasangan
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 text-zinc-900 drop-shadow-sm">
-            Kelola Keuangan Bersama,<br />
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-pink-600 to-purple-600">Lebih Harmonis.</span>
+            Kelola Keuangan Bersama,
+            <br />
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-pink-600 to-purple-600">
+              Lebih Harmonis.
+            </span>
           </h1>
           <p className="text-lg md:text-xl text-zinc-600 max-w-2xl mb-12 leading-relaxed font-medium">
-            Aplikasi keuangan yang mengutamakan kesetaraan, komunikasi, dan pengakuan kontribusi non-finansial dalam rumah tangga.
+            Aplikasi keuangan yang mengutamakan kesetaraan, komunikasi, dan
+            pengakuan kontribusi non-finansial dalam rumah tangga.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 w-full max-w-lg justify-center items-stretch min-h-[64px]">
+          <div className="flex flex-col sm:flex-row gap-4 w-full max-w-lg justify-center items-stretch min-h-16">
             {authLoading || checkingFamily ? (
               <div className="flex items-center justify-center gap-2 text-zinc-500 font-bold w-full py-4 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/40">
                 <Loader2 className="w-5 h-5 animate-spin" />
                 MENGECEK STATUS...
               </div>
             ) : !user ? (
-              <Button 
+              <Button
                 variant="glass"
                 size="xl"
                 onClick={handleGoogleLogin}
                 disabled={loading}
                 className="w-full shadow-xl shadow-zinc-200/50 border border-white/60 bg-white/70 hover:bg-white/90 backdrop-blur-xl group relative overflow-hidden"
-                leftIcon={loading ? <Loader2 className="w-5 h-5 animate-spin relative z-10" /> : <Image src="https://www.google.com/favicon.ico" alt="Google" width={20} height={20} className="w-5 h-5 relative z-10" />}
+                leftIcon={
+                  loading ? (
+                    <Loader2 className="w-5 h-5 animate-spin relative z-10" />
+                  ) : (
+                    <Image
+                      src="https://www.google.com/favicon.ico"
+                      loader={passthroughImageLoader}
+                      alt="Google"
+                      width={20}
+                      height={20}
+                      className="w-5 h-5 relative z-10"
+                    />
+                  )
+                }
               >
-                <span className="relative z-10">{loading ? "MEMPROSES..." : "Masuk dengan Google"}</span>
+                <span className="relative z-10">
+                  {loading ? "MEMPROSES..." : "Masuk dengan Google"}
+                </span>
                 <div className="absolute inset-0 bg-linear-to-r from-white/0 via-white/50 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
               </Button>
             ) : hasFamily === false ? (
               <>
-                <Button 
+                <Button
                   variant="primary"
                   size="xl"
                   onClick={handleRegister}
@@ -197,15 +226,21 @@ export default function Home() {
                       placeholder="KODE UNDANGAN"
                       value={inviteCode}
                       disabled={loading}
-                      onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                      className="w-full h-16 bg-white/60 backdrop-blur-md border border-white/40 rounded-[32px] px-8 pr-16 focus:outline-none focus:border-pink-500 transition-all text-lg font-bold placeholder:text-zinc-400 disabled:opacity-50"
+                      onChange={(e) =>
+                        setInviteCode(e.target.value.toUpperCase())
+                      }
+                      className="w-full h-16 bg-white/60 backdrop-blur-md border border-white/40 rounded-4xl px-8 pr-16 focus:outline-none focus:border-pink-500 transition-all text-lg font-bold placeholder:text-zinc-400 disabled:opacity-50"
                     />
-                    <button 
+                    <button
                       type="submit"
                       disabled={loading || !inviteCode}
                       className="absolute right-2 top-2 bottom-2 aspect-square bg-zinc-900 text-white p-2 rounded-full hover:bg-pink-600 transition-all disabled:opacity-50 flex items-center justify-center shadow-lg"
                     >
-                      {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
+                      {loading ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <ArrowRight className="w-5 h-5" />
+                      )}
                     </button>
                   </form>
                 </div>
@@ -217,37 +252,53 @@ export default function Home() {
               Masuk sebagai <span className="text-zinc-900">{user.email}</span>
             </p>
           )}
-          {error && <p className="mt-4 text-red-500 font-bold uppercase text-xs tracking-wider">{error}</p>}
+          {error && (
+            <p className="mt-4 text-red-500 font-bold uppercase text-xs tracking-wider">
+              {error}
+            </p>
+          )}
         </section>
 
         {/* Features Section */}
-        <section id="features" className="bg-white/20 backdrop-blur-sm py-24 px-6 md:px-12 border-y border-white/20">
+        <section
+          id="features"
+          className="bg-white/20 backdrop-blur-sm py-24 px-6 md:px-12 border-y border-white/20"
+        >
           <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-12">
             <div className="flex flex-col items-center text-center group">
-              <div className="bg-blue-100/50 backdrop-blur-md p-6 rounded-[32px] mb-6 border border-blue-200/50 transition-all group-hover:scale-110 group-hover:rotate-3 duration-500 shadow-xl shadow-blue-500/5">
+              <div className="bg-blue-100/50 backdrop-blur-md p-6 rounded-4xl mb-6 border border-blue-200/50 transition-all group-hover:scale-110 group-hover:rotate-3 duration-500 shadow-xl shadow-blue-500/5">
                 <Users className="w-8 h-8 text-blue-600" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-zinc-800">Kesetaraan Penuh</h3>
+              <h3 className="text-xl font-bold mb-3 text-zinc-800">
+                Kesetaraan Penuh
+              </h3>
               <p className="text-zinc-600 leading-relaxed font-medium">
-                Tidak ada pembedaan peran berdasarkan gender atau status pekerjaan. Semua kontribusi dihargai setara.
+                Tidak ada pembedaan peran berdasarkan gender atau status
+                pekerjaan. Semua kontribusi dihargai setara.
               </p>
             </div>
             <div className="flex flex-col items-center text-center group">
-              <div className="bg-pink-100/50 backdrop-blur-md p-6 rounded-[32px] mb-6 border border-pink-200/50 transition-all group-hover:scale-110 group-hover:-rotate-3 duration-500 shadow-xl shadow-pink-500/5">
+              <div className="bg-pink-100/50 backdrop-blur-md p-6 rounded-4xl mb-6 border border-pink-200/50 transition-all group-hover:scale-110 group-hover:-rotate-3 duration-500 shadow-xl shadow-pink-500/5">
                 <Heart className="w-8 h-8 text-pink-600" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-zinc-800">Kontribusi Non-Finansial</h3>
+              <h3 className="text-xl font-bold mb-3 text-zinc-800">
+                Kontribusi Non-Finansial
+              </h3>
               <p className="text-zinc-600 leading-relaxed font-medium">
-                Mengakui nilai dari mengurus rumah tangga dan pengasuhan sebagai bagian dari kontribusi keluarga.
+                Mengakui nilai dari mengurus rumah tangga dan pengasuhan sebagai
+                bagian dari kontribusi keluarga.
               </p>
             </div>
             <div className="flex flex-col items-center text-center group">
-              <div className="bg-zinc-100/50 backdrop-blur-md p-6 rounded-[32px] mb-6 border border-zinc-200/50 transition-all group-hover:scale-110 group-hover:rotate-3 duration-500 shadow-xl shadow-zinc-500/5">
+              <div className="bg-zinc-100/50 backdrop-blur-md p-6 rounded-4xl mb-6 border border-zinc-200/50 transition-all group-hover:scale-110 group-hover:rotate-3 duration-500 shadow-xl shadow-zinc-500/5">
                 <Shield className="w-8 h-8 text-zinc-600" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-zinc-800">Kesepakatan Bersama</h3>
+              <h3 className="text-xl font-bold mb-3 text-zinc-800">
+                Kesepakatan Bersama
+              </h3>
               <p className="text-zinc-600 leading-relaxed font-medium">
-                Setiap keputusan penting memerlukan persetujuan kedua belah pihak untuk menjaga keharmonisan.
+                Setiap keputusan penting memerlukan persetujuan kedua belah
+                pihak untuk menjaga keharmonisan.
               </p>
             </div>
           </div>
